@@ -1,0 +1,16 @@
+{
+  "// Managed by the sbx-vscode-claude kit": "defaults baked at build time",
+  "update.mode": "none",
+  "extensions.autoUpdate": false,
+  "extensions.autoCheckUpdates": false,
+  "telemetry.telemetryLevel": "off",
+  "workbench.enableExperiments": false,
+  "workbench.startupEditor": "none",
+  "workbench.colorTheme": "Default Dark Modern",
+  "window.titleBarStyle": "custom",
+  "security.workspace.trust.enabled": false,
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "git.openRepositoryInParentFolders": "always",
+  "chat.disableAIFeatures": true,
+  "workbench.welcomePage.walkthroughs.openOnInstall": false
+}

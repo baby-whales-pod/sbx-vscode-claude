@@ -1,0 +1,18 @@
+#!/bin/bash
+# VS Code on the sandbox's Wayland display. The sandbox has no GPU: without
+# these flags Electron's GPU process crashes and the window stays blank.
+socket=${SANDBOX_WAYLAND_SOCKET:-/run/display/wayland-0}
+# Wayland clients resolve the socket as $XDG_RUNTIME_DIR/$WAYLAND_DISPLAY;
+# an absolute WAYLAND_DISPLAY is also accepted.
+export WAYLAND_DISPLAY=$socket
+export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-$(dirname "$socket")}
+export ELECTRON_OZONE_PLATFORM_HINT=wayland
+unset DISPLAY
+
+# No keyring or D-Bus session in the sandbox: store secrets in VS Code's own
+# (basic) store instead of failing on gnome-keyring.
+exec /usr/bin/code \
+  --ozone-platform=wayland --enable-features=WaylandWindowDecorations \
+  --disable-gpu --disable-gpu-compositing --disable-dev-shm-usage \
+  --no-sandbox --password-store=basic \
+  "$@"

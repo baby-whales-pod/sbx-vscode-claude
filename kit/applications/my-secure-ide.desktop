@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=My Secure IDE (VS Code)
+Comment=VS Code with Claude Code, running inside a Docker Sandbox
+Exec=/opt/sbx-vscode-claude/bin/sandbox-code %F
+Icon=vscode
+Terminal=false
+Categories=Development;IDE;

@@ -1,0 +1,6 @@
+// VS Code runtime arguments for the sandbox: no GPU, no keyring.
+{
+  "disable-hardware-acceleration": true,
+  "password-store": "basic",
+  "enable-crash-reporter": false
+}

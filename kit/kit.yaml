@@ -1,0 +1,71 @@
+# syntax=docker/sandbox-kit:3
+#
+# My Secure IDE: VS Code running inside a Docker Sandbox, drawn on the
+# sandbox's Wayland display so that only the IDE window shows up on the host,
+# with Claude Code (CLI + VS Code extension) as the coding agent.
+# A workload built on the shell template with VS Code as its entrypoint in
+# place of bash; `sbx exec` still gives a shell.
+#
+# Run it with:  sbx run --display ./kit [WORKSPACE]
+schemaVersion: "3"
+kind: workload
+displayName: My Secure IDE
+description: >-
+    VS Code as the sandbox's entrypoint, on the sandbox's Wayland display with software rendering,
+    with Claude Code (CLI and VS Code extension) preinstalled as the coding agent.
+# Replace with the repository this kit is published from.
+sourceUrl: https://github.com/docker/sandboxes
+licenses: [MIT]
+version: "0.1.0"
+args:
+    vscodeVersion:
+        default: latest
+        pattern: '^(latest|[0-9]+\.[0-9]+\.[0-9]+)$'
+        description: VS Code release to install from Microsoft's apt repository ("latest" or e.g. 1.105.0)
+        buildArg: VSCODE_VERSION
+    claudeCodeVersion:
+        default: latest
+        pattern: '^(latest|[0-9]+\.[0-9]+\.[0-9]+)$'
+        description: Claude Code CLI release to install from npm ("latest" or e.g. 2.1.0)
+        buildArg: CLAUDE_CODE_VERSION
+    waylandSocket:
+        default: /run/display/wayland-0
+        description: Wayland compositor socket that VS Code draws on
+        env: SANDBOX_WAYLAND_SOCKET
+    keyboardLayout:
+        default: fr
+        pattern: '^[a-z]{2,3}(,[a-z]{2,3})*$'
+        description: XKB keyboard layout used by sandbox-desktop (e.g. fr, ch, de, us)
+        env: SANDBOX_KEYBOARD_LAYOUT
+    keyboardVariant:
+        default: mac
+        pattern: '^[A-Za-z0-9_-]*(,[A-Za-z0-9_-]*)*$'
+        description: XKB layout variant used by sandbox-desktop ("mac" for an Apple keyboard, empty for a PC keyboard)
+        env: SANDBOX_KEYBOARD_VARIANT
+capabilities:
+    - type: com.docker.sandbox/sbx@1
+    # VS Code, its extension and Claude Code are baked into the image at build,
+    # so there is no install phase to grant. These are the only hosts the
+    # running IDE and the agent need.
+    - type: com.docker.sandbox/network-policy@1
+      config:
+        runtime:
+            allow:
+                # Claude Code: API, sign-in and account
+                - api.anthropic.com
+                - anthropic.com
+                - "*.anthropic.com"
+                - claude.ai
+                - "*.claude.ai"
+                - claude.com
+                - "*.claude.com"
+                # Uncomment to let developers install extra extensions at runtime
+                # - marketplace.visualstudio.com
+                # - "*.gallery.vsassets.io"
+                # - "*.gallerycdn.vsassets.io"
+                # - "*.vscode-cdn.net"
+    - type: com.docker.sandbox/agent-context@1
+      config:
+        # Path relative to this kit directory; the sandbox-kit frontend stages it
+        # into the image and rewrites this field to the in-image path.
+        contentFile: sbx-vscode-claude-context.md

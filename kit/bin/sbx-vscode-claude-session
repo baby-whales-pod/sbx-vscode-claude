@@ -1,0 +1,21 @@
+#!/bin/bash
+# The kit's entrypoint: wait for the sandbox's Wayland display, then run VS Code
+# in the foreground on the workspace. The sandbox session ends when VS Code quits.
+socket=${SANDBOX_WAYLAND_SOCKET:-/run/display/wayland-0}
+for _ in $(seq 1 120); do
+  [ -S "$socket" ] && break
+  sleep 1
+done
+if [ ! -S "$socket" ]; then
+  echo "sbx-vscode-claude-session: no Wayland socket at $socket after 120s." >&2
+  echo "Did you create the sandbox with --display?" >&2
+  exit 1
+fi
+
+# Open the workspace the sandbox was started in (sbx sets the working
+# directory to the mounted workspace), unless a path is given.
+if [ "$#" -eq 0 ]; then
+  set -- "$PWD"
+fi
+
+exec /opt/sbx-vscode-claude/bin/sandbox-code --wait "$@"

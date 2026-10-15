@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460" font-family="DejaVu Sans, Verdana, sans-serif">
+  <defs>
+    <linearGradient id="gBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#EEF2FA"/></linearGradient>
+    <linearGradient id="gBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E3F2FD"/><stop offset="100%" stop-color="#BBDEFB"/></linearGradient>
+    <linearGradient id="gBlue2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E1F5FE"/><stop offset="100%" stop-color="#B3E5FC"/></linearGradient>
+    <linearGradient id="gPurple" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F3E5F5"/><stop offset="100%" stop-color="#E1BEE7"/></linearGradient>
+    <linearGradient id="gYellow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFFDE7"/><stop offset="100%" stop-color="#FFF9C4"/></linearGradient>
+    <linearGradient id="gGrey" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ECEFF1"/><stop offset="100%" stop-color="#CFD8DC"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="2" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.25"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#37474F"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="460" fill="url(#gBg)"/>
+  <text x="600.0" y="38" text-anchor="middle" font-size="25" font-weight="700" fill="#1A237E">My Secure IDE — from kit sources to a running IDE</text>
+  <text x="600.0" y="61" text-anchor="middle" font-size="14" font-style="italic" fill="#546E7A">sbx builds the kit image once, then every sbx run --display starts a fresh, confined IDE</text>
+  <g filter="url(#shadow)"><rect x="40" y="120" width="220" height="130" rx="16" fill="url(#gBlue)" stroke="#1565C0" stroke-width="2"/></g>
+  <text x="150.0" y="167.0" text-anchor="middle" font-size="22">💾</text>
+  <text x="150.0" y="191.0" text-anchor="middle" font-size="16" font-weight="700" fill="#0D47A1">Kit sources</text>
+  <text x="150.0" y="209.0" text-anchor="middle" font-size="12" fill="#0D47A1">kit.yaml (descriptor, policy)</text>
+  <text x="150.0" y="225.0" text-anchor="middle" font-size="12" fill="#0D47A1">kit.dockerfile + bin/ + config/</text>
+  <g filter="url(#shadow)"><rect x="340" y="120" width="220" height="130" rx="16" fill="url(#gYellow)" stroke="#F9A825" stroke-width="2"/></g>
+  <text x="450.0" y="167.0" text-anchor="middle" font-size="22">🏗️</text>
+  <text x="450.0" y="191.0" text-anchor="middle" font-size="16" font-weight="700" fill="#F57F17">sbx kit builder</text>
+  <text x="450.0" y="209.0" text-anchor="middle" font-size="12" fill="#F57F17">builds the image and</text>
+  <text x="450.0" y="225.0" text-anchor="middle" font-size="12" fill="#F57F17">embeds the kit descriptor</text>
+  <g filter="url(#shadow)"><rect x="640" y="120" width="220" height="130" rx="16" fill="url(#gBlue2)" stroke="#0277BD" stroke-width="2"/></g>
+  <text x="750.0" y="167.0" text-anchor="middle" font-size="22">📦</text>
+  <text x="750.0" y="191.0" text-anchor="middle" font-size="16" font-weight="700" fill="#01579B">Kit image</text>
+  <text x="750.0" y="209.0" text-anchor="middle" font-size="12" fill="#01579B">VS Code · Claude Code</text>
+  <text x="750.0" y="225.0" text-anchor="middle" font-size="12" fill="#01579B">network policy · agent context</text>
+  <g filter="url(#shadow)"><rect x="940" y="120" width="220" height="130" rx="16" fill="url(#gPurple)" stroke="#6A1B9A" stroke-width="3"/></g>
+  <text x="1050.0" y="167.0" text-anchor="middle" font-size="22">🚀</text>
+  <text x="1050.0" y="191.0" text-anchor="middle" font-size="16" font-weight="700" fill="#4A148C">sbx run --display</text>
+  <text x="1050.0" y="209.0" text-anchor="middle" font-size="12" fill="#4A148C">fresh sandbox per run</text>
+  <text x="1050.0" y="225.0" text-anchor="middle" font-size="12" fill="#4A148C">VS Code window on the host</text>
+  <rect x="1093.8" y="108" width="52.2" height="24" rx="12" fill="#6A1B9A"/>
+  <text x="1119.8999999999999" y="124.5" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">★ demo</text>
+  <g filter="url(#shadow)"><rect x="640" y="320" width="220" height="90" rx="16" fill="url(#gGrey)" stroke="#455A64" stroke-width="2"/></g>
+  <text x="750.0" y="355.0" text-anchor="middle" font-size="22">🗄️</text>
+  <text x="750.0" y="379.0" text-anchor="middle" font-size="16" font-weight="700" fill="#263238">OCI registry</text>
+  <text x="750.0" y="397.0" text-anchor="middle" font-size="12" fill="#263238">share the kit with the team</text>
+  <path d="M262,185 L338,185" fill="none" stroke="#37474F" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="274.0" y="175.0" width="52" height="20" rx="4" fill="#FAFBFF"/>
+  <text x="300" y="189.5" text-anchor="middle" font-size="12.5" font-weight="700" fill="#263238">build</text>
+  <path d="M562,185 L638,185" fill="none" stroke="#37474F" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="573.0" y="175.0" width="54" height="20" rx="4" fill="#FAFBFF"/>
+  <text x="600" y="189.5" text-anchor="middle" font-size="12.5" font-weight="700" fill="#263238">image</text>
+  <path d="M862,185 L938,185" fill="none" stroke="#37474F" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="880.0" y="175.0" width="40" height="20" rx="4" fill="#FAFBFF"/>
+  <text x="900" y="189.5" text-anchor="middle" font-size="12.5" font-weight="700" fill="#263238">run</text>
+  <path d="M750,250 L750,318" fill="none" stroke="#37474F" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="770.0" y="274.0" width="100" height="20" rx="4" fill="#FAFBFF"/>
+  <text x="820" y="288.5" text-anchor="middle" font-size="12.5" font-weight="700" fill="#263238">sbx kit push</text>
+  <path d="M862,365 L1050,365 L1050,252" fill="none" stroke="#37474F" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="870.0" y="355.0" width="170" height="20" rx="4" fill="#FAFBFF"/>
+  <text x="955" y="369.5" text-anchor="middle" font-size="12.5" font-weight="700" fill="#263238">sbx run --display &lt;ref&gt;</text>
+</svg>

@@ -1,0 +1,53 @@
+#!/bin/bash
+# A labwc desktop nested in the sandbox's Wayland display, with its own keyboard
+# layout. Windows drawn straight on the sandbox display don't follow the host's
+# layout; apps started inside labwc use the layout set by the kit args.
+#
+#   sandbox-desktop               # opens a foot terminal
+#   sandbox-desktop <command...>  # opens any other app
+set -euo pipefail
+
+socket=${SANDBOX_WAYLAND_SOCKET:-/run/display/wayland-0}
+if [ ! -S "$socket" ]; then
+  echo "sandbox-desktop: no Wayland socket at $socket." >&2
+  echo "Did you create the sandbox with --display?" >&2
+  exit 1
+fi
+
+# labwc creates its own socket here, for the apps it starts.
+if [ -z "${XDG_RUNTIME_DIR:-}" ] || [ ! -w "$XDG_RUNTIME_DIR" ]; then
+  XDG_RUNTIME_DIR=$(mktemp -d)
+fi
+export XDG_RUNTIME_DIR
+
+# Absolute path on purpose: sbx sets WAYLAND_DISPLAY=wayland-0 in
+# $XDG_RUNTIME_DIR, which is its clipboard bridge, not a compositor.
+export WAYLAND_DISPLAY=$socket
+export WLR_RENDERER=pixman # no GPU in the sandbox
+export LANG=${SANDBOX_DESKTOP_LANG:-fr_FR.UTF-8}
+
+# labwc reads the layout from its environment file. Rewritten on every launch
+# so it always matches the kit args.
+mkdir -p "$HOME/.config/labwc"
+printf 'XKB_DEFAULT_LAYOUT=%s\nXKB_DEFAULT_VARIANT=%s\n' \
+  "${SANDBOX_KEYBOARD_LAYOUT:-fr}" "${SANDBOX_KEYBOARD_VARIANT:-}" \
+  > "$HOME/.config/labwc/environment"
+
+if [ "$#" -eq 0 ]; then
+  set -- foot
+fi
+
+# Apps started by labwc must draw on labwc's socket, not on the sandbox
+# display: sandbox-code reads SANDBOX_WAYLAND_SOCKET, so point it there. A
+# script file sidesteps how labwc splits its startup command.
+child=$(mktemp "$XDG_RUNTIME_DIR/sandbox-desktop.XXXXXX")
+{
+  echo '#!/bin/bash'
+  echo 'export SANDBOX_WAYLAND_SOCKET="$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"'
+  printf 'exec'
+  printf ' %q' "$@"
+  echo
+} > "$child"
+chmod 0700 "$child"
+
+exec labwc -s "$child"
