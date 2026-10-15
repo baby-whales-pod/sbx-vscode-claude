@@ -29,38 +29,50 @@ A compositor can itself be a client of another compositor. That's called a **nes
 ## How a sandbox window reaches your Mac
 
 ```
- Mac (host)                               Sandbox (Linux microVM)
-┌──────────────────────────────┐        ┌──────────────────────────────────┐
-│ sailor's Wayland compositor  │◄─vsock─┤ /run/display/wayland-0           │
-│ (one native macOS window     │        │        ▲                         │
-│  per Wayland window)         │        │        │ Wayland client          │
-└──────────────────────────────┘        │   VS Code (the kit's entrypoint) │
-                                        └──────────────────────────────────┘
+ Mac (host)                                         Sandbox (Linux microVM)
+┌───────────────────────────────┐                ┌─────────────────────────────────────┐
+│ sailor (crates/compositor)    │◄──── vsock ────┤ compositor-guest (crates/compositor- │
+│ winit · one native macOS      │  raw scancodes  │ guest, smithay) — the real Wayland   │
+│ window per Wayland surface    │                 │ server, creates /run/display/wayland-0│
+└───────────────────────────────┘                │        ▲ Wayland client              │
+                                                  │   VS Code (the kit's entrypoint)      │
+                                                  └─────────────────────────────────────┘
 ```
 
 1. `sbx run --display` asks for a display for the sandbox. sandboxd sets the `com.docker.sandbox.display=wayland` label on the container.
-2. The sandbox engine (docker-next, v0.6.0 or later) reads that label and creates the **`/run/display/wayland-0`** socket in the microVM.
-3. That socket is relayed over **vsock** (the VM-to-host channel) to a Wayland compositor running on the host, provided by **sailor**, the Docker Sandboxes hypervisor. It opens a native macOS window for each Wayland window.
-4. VS Code, started with `--ozone-platform=wayland` and software rendering (the VM has no GPU), connects to that socket. Its window shows up on your desktop like any app.
+2. The sandbox engine (docker-next, v0.6.0 or later) reads that label and starts, inside the microVM, sailor's guest compositor (`compositor-guest`), which creates the **`/run/display/wayland-0`** socket.
+3. Keyboard/mouse events are captured on the Mac side by `sailor` (the host process, `crates/compositor`, built on winit) and relayed **raw** over **vsock** (the VM-to-host channel) to `compositor-guest`, which opens a native macOS window in return for each Wayland window it shows.
+4. VS Code, started with `--ozone-platform=wayland` and software rendering (the VM has no GPU), connects directly to `compositor-guest` — **not** to a passive relay. Its window shows up on your desktop like any app.
 
 ## Why the keyboard is in QWERTY
 
-sailor's compositor is a native library (Rust/winit) with no keyboard-layout setting: neither sbx, docker-next nor the display API expose one. In practice, apps drawn straight on `/run/display/wayland-0` get a keymap that doesn't follow the Mac's layout, and you type in QWERTY. The app can't do anything about it: it uses the keymap the compositor gives it.
+*Updated from the source of [`docker/sailor`](https://github.com/docker/sailor) (Docker's internal repo) — the following is no longer an outside-in guess, it's verified in the code.*
 
-## The fix: a nested compositor, labwc
+There are actually **two compositors**, not one:
+
+- on the Mac side, `crates/compositor` (built on **winit**) opens one native window per surface and relays **raw** keyboard events (evdev scancodes, not characters) to the microVM over **vsock**;
+- inside the microVM, `crates/compositor-guest` (built on **smithay**) is the **real Wayland server**: it creates `/run/display/wayland-0`, owns `wl_seat`/`wl_keyboard`, and VS Code connects to it directly.
+
+![Why the keyboard layout is hardcoded](diagrams/keyboard-path.png)
+
+The keyboard layout is a **constant** in that second compositor, not a missing setting: in `crates/compositor-guest/src/state.rs`, the keyboard is initialized with `XkbConfig { layout: "us", .. }`, and the keymap actually used is a **precompiled US string embedded in the binary** (`xkb_bootstrap/us_keymap.xkb`). That's a deliberate workaround for a crash: compiling a keymap from RMLVO names (`xkb_keymap_new_from_names`) needs an on-disk XKB dataset, which minimal guest images don't ship, and that made `libxkbcommon` **segfault** ([`docker/sailor#1677`](https://github.com/docker/sailor/issues/1677), fixed by embedding the US keymap instead). VS Code can't do anything about it: it gets whatever keymap `compositor-guest` sends, and that's always `us`.
+
+Worth noting: the plumbing for a per-layout setting partly exists already. `compositor-guest` already retranslates some keys case by case — `keymap.rs` turns ⌘ (Super) into Ctrl or Ctrl+Shift depending on the focused app (terminal or not), toggled with `sailor run --no-key-remap` (which passes `display.keymap=0` to the microVM's kernel, read by `container-init`). A future `--keyboard-layout` would likely follow the same path — but as of now, **no issue is open** for it on `docker/sailor`.
+
+## A partial (and costly) fix: a nested compositor, labwc
 
 ```
  Mac (host)                         Sandbox
-┌───────────────────────┐        ┌───────────────────────────────────────────┐
-│ sailor's compositor   │◄─vsock─┤ /run/display/wayland-0                    │
-│  └ "labwc" window     │        │        ▲ client (a single window)         │
-└───────────────────────┘        │      labwc  ← fr / mac keymap             │
-                                 │        ▲ labwc's socket ($XDG_RUNTIME_DIR)│
-                                 │      foot, or any other app               │
-                                 └───────────────────────────────────────────┘
+┌───────────────────────┐        ┌────────────────────────────────────────────────┐
+│ sailor's compositor   │◄─vsock─┤ compositor-guest (already a real compositor)  │
+│  └ "labwc" window     │        │        ▲ client (a single window) ─ us keymap │
+└───────────────────────┘        │      labwc  ← fr / mac keymap                  │
+                                 │        ▲ labwc's socket ($XDG_RUNTIME_DIR)     │
+                                 │      foot, or any other app                    │
+                                 └────────────────────────────────────────────────┘
 ```
 
-**labwc** is a small Wayland compositor built on the wlroots library. `sandbox-desktop` starts it **as a client** of the sandbox display:
+**labwc** is a small Wayland compositor built on the wlroots library. `sandbox-desktop` starts it **as a client of `compositor-guest`** — so, with what we now know, as a **third** compositor in the chain (sailor → compositor-guest → labwc → app), not a second one:
 
 - labwc opens **a single window** on the Mac and creates its own socket for the apps it starts;
 - it receives keystrokes from sailor and **translates them again with its own keymap**: the one from `XKB_DEFAULT_LAYOUT` / `XKB_DEFAULT_VARIANT`, read from `~/.config/labwc/environment`;
@@ -113,4 +125,7 @@ What `sandbox-desktop` (in `kit/bin/`) does, in order:
 
 - **In a real sandbox**, by hand: nested labwc with the `~/.config/labwc/environment` file gives AZERTY.
 - **Without sbx**, with a headless compositor: the install step works on Ubuntu 26.04, labwc opens a single window, foot draws inside labwc, and the layout comes from the kit args.
-- **Limitation**: VS Code allows a single instance. While the entrypoint's VS Code is running (drawn straight on the display, so in QWERTY), running `sandbox-code` inside `sandbox-desktop` opens the window in the existing instance. For VS Code in AZERTY, the entrypoint itself would have to start VS Code inside labwc.
+- **Limitation #1**: VS Code allows a single instance. While the entrypoint's VS Code is running (drawn straight on the display, so in QWERTY), running `sandbox-code` inside `sandbox-desktop` opens the window in the existing instance. For VS Code in AZERTY, the entrypoint itself would have to start VS Code inside labwc.
+- **Limitation #2, more serious**: testing that scenario (entrypoint starting inside labwc) made the image noticeably less sharp. The most likely explanation, now that we know labwc nests inside `compositor-guest` (already a full compositor, not a passive relay): a nested wlroots compositor doesn't necessarily negotiate its parent's HiDPI scale factor, and renders at scale 1 while `compositor-guest`/sailor display at Retina scale — hence the blur. Not necessarily unfixable (forcing labwc's output scale), but it only shows up in a real sandbox, and it wasn't adopted as this kit's fix.
+
+**Practical conclusion**: the keyboard layout isn't a setting the kit is missing, nor something a nested compositor can cleanly fix on the image side — it's a constant in sailor's guest compositor (`layout: "us"`, hardcoded). The right fix belongs upstream, in `docker/sailor`, following the same plumbing already used for the ⌘→Ctrl remap (a `--keyboard-layout` flag, a handful of precompiled embedded keymaps like `us_keymap.xkb`). No issue is open on this yet.

@@ -18,7 +18,7 @@
   <text x="130.0" y="219.0" text-anchor="middle" font-size="12" fill="#0D47A1">macOS · Windows · Linux</text>
   <text x="130.0" y="235.0" text-anchor="middle" font-size="12" fill="#0D47A1">shows the VS Code window</text>
   <rect x="320" y="95" width="540" height="545" rx="10" fill="none" stroke="#90A4AE" stroke-width="2" stroke-dasharray="7,5"/>
-  <text x="590.0" y="117" text-anchor="middle" font-size="13" font-style="italic" font-weight="700" fill="#607D8B">Docker Sandbox (microVM) — kit sbx-vscode-claude</text>
+  <text x="590.0" y="117" text-anchor="middle" font-size="13" font-style="italic" font-weight="700" fill="#607D8B">Docker Sandbox (microVM) — kit my-secure-ide</text>
   <g filter="url(#shadow)"><rect x="360" y="140" width="460" height="110" rx="16" fill="url(#gPurple)" stroke="#6A1B9A" stroke-width="3"/></g>
   <text x="590.0" y="177.0" text-anchor="middle" font-size="22">🧑‍💻</text>
   <text x="590.0" y="201.0" text-anchor="middle" font-size="16" font-weight="700" fill="#4A148C">VS Code (Electron)</text>

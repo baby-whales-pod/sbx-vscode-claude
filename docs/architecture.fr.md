@@ -33,7 +33,7 @@ sbx run --display ./kit ~/projects/my-app
   ├─ sbx : crée la microVM, monte ~/projects/my-app, applique network-policy@1,
   │        fournit /run/display/wayland-0 (socket Wayland reliée au compositeur de l'hôte)
   │
-  └─ entrypoint : tini -- /opt/sbx-vscode-claude/bin/sbx-vscode-claude-session
+  └─ entrypoint : tini -- /opt/my-secure-ide/bin/my-secure-ide-session
         ├─ attend la socket Wayland (120 s max, sinon erreur claire : « --display ? »)
         └─ exec sandbox-code --wait "$PWD"
               └─ /usr/bin/code --ozone-platform=wayland --disable-gpu --no-sandbox
@@ -53,7 +53,7 @@ sbx run --display ./kit ~/projects/my-app
 | `args` | `vscodeVersion`, `claudeCodeVersion` (build args), `waylandSocket` (env runtime `SANDBOX_WAYLAND_SOCKET`). |
 | `com.docker.sandbox/sbx@1` | Intégration standard à la sandbox (template shell, `sbx exec`…). |
 | `com.docker.sandbox/network-policy@1` | Allowlist runtime : `api.anthropic.com`, `*.anthropic.com`, `claude.ai`, `*.claude.ai`, `claude.com`, `*.claude.com`. |
-| `com.docker.sandbox/agent-context@1` | `sbx-vscode-claude-context.md` : explique à l'agent comment fonctionne l'environnement (affichage Wayland, pas de GPU, marketplace bloqué…). |
+| `com.docker.sandbox/agent-context@1` | `my-secure-ide-context.md` : explique à l'agent comment fonctionne l'environnement (affichage Wayland, pas de GPU, marketplace bloqué…). |
 
 ## Choix de conception
 

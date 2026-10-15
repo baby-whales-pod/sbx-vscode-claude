@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
-"""Generate the sbx-vscode-claude diagrams as both .drawio (editable) and .svg.
+"""Generate the my-secure-ide diagrams as both .drawio (editable) and .svg.
 
 One description per diagram drives both outputs, so the two files never drift.
 Render the PNGs with:  rsvg-convert -o <name>.png <name>.svg
 """
-from xml.sax.saxutils import escape
+from xml.sax.saxutils import escape as _escape
+
+
+def escape(s):
+    # Plain escape() only handles &, < and >: any literal " in a label (e.g.
+    # 'hardcoded "us"') would otherwise terminate the drawio value="..."
+    # attribute early and produce an unparsable .drawio file.
+    return _escape(s, {'"': "&quot;", "'": "&apos;"})
 
 PALETTE = {  # role: (fill, gradient, stroke, text, svg gradient id)
     "client": ("#E3F2FD", "#BBDEFB", "#1565C0", "#0D47A1", "gBlue"),
@@ -102,7 +109,7 @@ class Diagram:
         svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{self.w}" height="{self.h}" viewBox="0 0 {self.w} {self.h}" font-family="DejaVu Sans, Verdana, sans-serif">\n'
                + SVG_DEFS + "\n".join(self.svg) + "\n</svg>\n")
         open(f"{self.name}.svg", "w").write(svg)
-        drawio = (f'<mxfile host="app.diagrams.net" agent="sbx-vscode-claude/generate.py" type="device">\n'
+        drawio = (f'<mxfile host="app.diagrams.net" agent="my-secure-ide/generate.py" type="device">\n'
                   f'  <diagram name="{self.name}" id="{self.name}">\n'
                   f'    <mxGraphModel dx="1400" dy="800" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="{self.w}" pageHeight="{self.h}" math="0" shadow="0">\n'
                   '      <root>\n        <mxCell id="0"/>\n        <mxCell id="1" parent="0"/>\n'
@@ -115,7 +122,7 @@ def runtime():
     d = Diagram("runtime-architecture", 1200, 700, "My Secure IDE — runtime architecture",
                 "VS Code + Claude Code run inside a Docker Sandbox; only the IDE window reaches the host")
     d.box(30, 140, 200, 110, "client", "🖥️", "Host desktop", ["macOS · Windows · Linux", "shows the VS Code window"])
-    d.container(320, 95, 540, 545, "Docker Sandbox (microVM) — kit sbx-vscode-claude")
+    d.container(320, 95, 540, 545, "Docker Sandbox (microVM) — kit my-secure-ide")
     d.box(360, 140, 460, 110, "hl", "🧑‍💻", "VS Code (Electron)", ["entrypoint · Wayland client · software rendering", "opens the mounted workspace"], badge="★ entrypoint")
     d.box(360, 300, 460, 100, "agent", "🤖", "Claude Code", ["VS Code extension + claude CLI"])
     d.box(360, 460, 460, 90, "engine", "🗃", "Workspace", ["your project, mounted from the host"])
@@ -146,6 +153,33 @@ def build_run():
     d.write()
 
 
+def keyboard_path():
+    d = Diagram("keyboard-path", 1300, 700, "My Secure IDE — why the keyboard layout is hardcoded",
+                "Ground truth from docker/sailor's source: two compositors, and a hardcoded \"us\" keymap in the guest one")
+    d.container(30, 100, 330, 480, "Host (macOS) — sailor")
+    d.box(55, 140, 280, 110, "neutral", "⌨️", "Physical keyboard", ["any layout: fr, de, ch, us…", "macOS applies no translation here"])
+    d.box(55, 290, 280, 170, "hl", "🪟", "sailor (host process)", ["crates/compositor — winit", "one native window per surface", "VMM backend: KVM / HVF / WHP"], badge="host")
+
+    d.container(420, 100, 850, 480, "Sandbox (microVM) — its own Linux kernel")
+    d.box(450, 140, 280, 170, "engine", "🧩", "compositor-guest", ["crates/compositor-guest (smithay)", "the real Wayland server", "owns /run/display/wayland-0", "real wl_seat / wl_keyboard"], badge="guest compositor")
+    d.box(450, 340, 280, 100, "agent", "⌘", "Cmd remap", ["keymap.rs: ⌘→Ctrl / Ctrl+⇧", "by focused app_id"])
+    d.box(450, 470, 280, 90, "neutral", "🔒", 'Keymap: hardcoded "us"', ["xkb_bootstrap.rs", "embedded us_keymap.xkb string"])
+    d.box(790, 140, 440, 170, "hl", "🧑‍💻", "VS Code", ["Wayland client (Electron/Ozone)", "wl_keyboard.keymap = \"us\"", "always QWERTY, whatever the physical layout"], badge="★ entrypoint")
+    d.box(790, 340, 440, 100, "neutral", "🖥", "foot / other guest apps", ["same compositor-guest socket", "same hardcoded keymap"])
+
+    d.edge([(195, 250), (195, 288)], "NSEvent → scancode", at=(195, 269), lw=130)
+    d.edge([(335, 375), (448, 225)], "vsock", "raw evdev scancode + press/release", at=(392, 300), lw=150)
+    d.edge([(590, 310), (590, 338)], "key event (scancode)", at=(560, 324), lw=150)
+    d.edge([(590, 440), (590, 468)], "remapped scancode", at=(690, 454), lw=140)
+    d.edge([(730, 200), (788, 200)], 'wl_keyboard.key + "us" keymap', at=(770, 180), lw=200)
+    d.edge([(730, 250), (788, 390)], 'same keymap', at=(775, 330), lw=100)
+    d.note(650, 605, 'Layout is a constant, not a setting — docker/sailor#1677 (closed).')
+    d.note(650, 625, 'compositor-guest embeds a precompiled "us" keymap to dodge a libxkbcommon crash (no XKB data on disk).')
+    d.note(650, 645, 'The ⌘-remap path shows per-keycode guest-side rules are already plumbed — just never exposed as a layout flag.')
+    d.write()
+
+
 if __name__ == "__main__":
     runtime()
     build_run()
+    keyboard_path()
