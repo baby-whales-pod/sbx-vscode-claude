@@ -78,6 +78,10 @@ RUN set -eux; \
 # /opt/sbx-vscode-claude/bin comes first so its launchers win.
 ENV PATH=/opt/sbx-vscode-claude/bin:${PATH}
 
+# sbx starts the entrypoint itself, so tini is not PID 1: register it as a child
+# subreaper so it still reaps the zombie processes of Electron and labwc.
+ENV TINI_SUBREAPER=1
+
 WORKDIR /home/agent/workspace
 
 # Setting ENTRYPOINT drops the template's CMD ["bash"]; the empty CMD says so.

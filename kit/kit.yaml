@@ -32,6 +32,11 @@ args:
         default: /run/display/wayland-0
         description: Wayland compositor socket that VS Code draws on
         env: SANDBOX_WAYLAND_SOCKET
+    nestedDesktop:
+        default: "true"
+        pattern: '^(true|false)$'
+        description: Start VS Code inside sandbox-desktop (labwc), so that it follows keyboardLayout
+        env: SANDBOX_NESTED_DESKTOP
     keyboardLayout:
         default: fr
         pattern: '^[a-z]{2,3}(,[a-z]{2,3})*$'

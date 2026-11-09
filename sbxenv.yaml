@@ -1,0 +1,40 @@
+schemaVersion: "1"
+
+# Sandbox name
+name: sbx-vscode-claude
+
+# The workload kit is the base "agent": its name is the kit directory name.
+agent: kit
+
+# Relative paths resolve against the directory of this file.
+kits:
+  - source: ./kit
+    # Same as `--kit-arg …` on `sbx run`.
+    # nestedDesktop "true" runs VS Code inside a nested labwc desktop that applies
+    # the keyboard layout (the sandbox display itself is always US), but the
+    # rendering is blurry and the window smaller on a HiDPI host. "false" draws
+    # VS Code straight on the display: sharp and full size, but QWERTY.
+    args:
+      nestedDesktop: "false"
+      keyboardLayout: fr       # only used when nestedDesktop is "true"
+      keyboardVariant: mac     # "mac" for an Apple keyboard, "" for a PC keyboard
+      # vscodeVersion: latest
+      # claudeCodeVersion: latest
+  # Optional toolchain kits (same as the extra `--kit …` flags on `sbx run`):
+  # - source: docker.io/k33g/go-toolchain-kit:0.0.2
+  # - source: docker.io/k33g/rust-toolchain-kit:0.0.2
+
+# The project VS Code and Claude Code can see. `.` is this folder; point it at
+# your own project instead, e.g. ~/projects/my-app.
+workspace: .
+
+sandboxOptions:
+  # Required: the Wayland socket that shows the VS Code window on the host
+  # (`sbx run --display`). It can only be set when the sandbox is created.
+  display: true
+
+# https://docs.docker.com/ai/sandboxes/configuration/environment-files/
+# sbx env create    # shows the plan and asks for confirmation (--force to skip)
+# sbx env run       # re-attach (creates the sandbox first if it does not exist)
+# sbx env rm        # delete the sandbox. After editing the kit, rm then create again:
+#                   # an existing sandbox keeps the image it was built with.

@@ -2,6 +2,8 @@
 
 ![architecture](./assets/runtime-architecture.svg)
 
+## Start it with `sbx env`
+
 
 ## Start VSCode
 

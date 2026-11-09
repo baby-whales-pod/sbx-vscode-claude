@@ -33,6 +33,20 @@ printf 'XKB_DEFAULT_LAYOUT=%s\nXKB_DEFAULT_VARIANT=%s\n' \
   "${SANDBOX_KEYBOARD_LAYOUT:-fr}" "${SANDBOX_KEYBOARD_VARIANT:-}" \
   > "$HOME/.config/labwc/environment"
 
+# labwc doesn't maximize windows: VS Code would keep its first size when the host
+# window is resized, with black around it. Maximize every window so it fills the
+# host window and follows its size. Rewritten on every launch.
+cat > "$HOME/.config/labwc/rc.xml" <<'EOF'
+<?xml version="1.0"?>
+<labwc_config>
+  <windowRules>
+    <windowRule identifier="*">
+      <action name="Maximize"/>
+    </windowRule>
+  </windowRules>
+</labwc_config>
+EOF
+
 if [ "$#" -eq 0 ]; then
   set -- foot
 fi
