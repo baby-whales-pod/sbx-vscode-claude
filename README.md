@@ -4,6 +4,10 @@
 
 ## Start it with `sbx env`
 
+```bash
+sbx env run --force
+```
+
 
 ## Start VSCode
 
